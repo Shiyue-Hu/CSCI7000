@@ -79,15 +79,13 @@ for idx, row in df.iterrows():
     reranked = sorted(zip(candidate_chunks, rerank_scores), key=lambda x: x[1], reverse=True)
     relevant_chunks = [chunk for chunk, _ in reranked[:TOP_K_CHUNKS]]
 
-    prompt = f"""You are a medical professional answering a clinical ethics multiple-choice question.
+    prompt = f"""Consider the following background information from medical ethics guidelines when making your choice:
+{context}
 
-Use the following medical ethics context to inform your decision:
-{" ".join(relevant_chunks)}
-
-Now, read the scenario below and choose the most ethically appropriate response:
-{question}
-
-Answer with JUST the letter of the most ethical choice:
+---
+You are a medical professional. Answer with JUST the letter of the most ethical choice:
+{row['Question']}
+Please answer with your choice below
 Answer:"""
 
     answer = llm(prompt, max_new_tokens=10)[0]['generated_text'].strip()
