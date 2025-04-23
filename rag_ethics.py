@@ -13,21 +13,27 @@ MEDICAL_CSV_PATH = "/home/hushiy/scripts/Medical.csv"
 OUTPUT_CSV_PATH = "mistral_rag.csv"
 EMBEDDING_MODEL = "pritamdeka/S-PubMedBert-MS-MARCO" 
 LLM_MODEL = "BioMistral/BioMistral-7B"
-TOP_K_CHUNKS = 5
+TOP_K_CHUNKS = 1
 
 
 def chunk_ama_by_opinion(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
+    with open(file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
 
-    pattern = r"(?=(\d+\.\d+\.\d+ [^\n]+))"
-    splits = re.split(pattern, text)
+    pattern = re.compile(r'(?m)^\s*(?P<id>\d+(?:\.\d+){1,2})\b')
 
+    matches = list(pattern.finditer(text))
     chunks = []
-    for i in range(1, len(splits), 2):  
-        title = splits[i].strip()
-        content = splits[i + 1].strip() if i + 1 < len(splits) else ""
-        chunks.append({"title": title, "text": content})
+
+    for i, m in enumerate(matches):
+        start = m.end()
+        end   = matches[i+1].start() if i+1 < len(matches) else len(text)
+        opinion_id = m.group('id')
+        content    = text[start:end].strip()
+        chunks.append({
+            "id":   opinion_id,
+            "text": content
+        })
 
     return chunks
 
